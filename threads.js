@@ -677,7 +677,7 @@ Process.prototype.handleError = function (error, element) {
     this.errorFlag = true;
     this.topBlock.addErrorHighlight();
 
-    console.log(error.name, error.message);
+    console.log(this, error.name, error.message);
     
     (element || this.topBlock).showBubble(
         (element ? '' : 'Inside: ')
