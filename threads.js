@@ -2156,6 +2156,14 @@ Process.prototype.reportTextSplit = function (string, delimiter) {
     return new List(str.split(del));
 };
 
+Process.prototype.reportRegex = function(pattern, modifiers) {
+    return new RegExp(pattern, modifiers);
+};
+
+Process.prototype.reportTextReplace = function (searchValue, newValue, text) {
+    return text.replace(searchValue, newValue);
+};
+
 // Process debugging
 
 Process.prototype.alert = function (data) {

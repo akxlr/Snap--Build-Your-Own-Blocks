@@ -976,6 +976,18 @@ SpriteMorph.prototype.initBlocks = function () {
             spec: 'split %s by %delim',
             defaults: [localize('hello') + ' ' + localize('world'), " "]
         },
+        reportRegex : {
+            type: 'reporter',
+            category: 'operators',
+            spec: 'regex %s %s',
+            defaults: [localize('pattern'), localize('modifiers')]
+        },
+        reportTextReplace: {
+            type: 'reporter',
+            category: 'operators',
+            spec: 'replace %s with %s in %s',
+            defaults: [localize('search') + ' ' + localize('value'), localize('new') + ' ' + localize('value'), localize('text')]
+        },
         reportTypeOf: { // only in dev mode for debugging
             type: 'reporter',
             category: 'operators',
@@ -1837,6 +1849,9 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportTextSplit'));
         blocks.push(block('reportLetter'));
         blocks.push(block('reportStringSize'));
+        blocks.push('-');
+        blocks.push(block('reportRegex'));
+        blocks.push(block('reportTextReplace'));
         blocks.push('-');
         blocks.push(block('reportUnicode'));
         blocks.push(block('reportUnicodeAsLetter'));
