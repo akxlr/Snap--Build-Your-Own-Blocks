@@ -563,6 +563,14 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'pen',
             spec: 'stamp'
         },
+        
+        
+        printString: {
+            type: 'command',
+            category: 'pen',
+            spec: 'print %s at x: %n y: %n font: %s size: %n color: %s', // TODO should use %clr (colour picker) but this is blocked by SOP when running locally
+            defaults: ['Hello', 0, 0, 'Arial', 16, '#000']
+        },
 
         // Control
         receiveGo: {
@@ -1017,6 +1025,18 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'operators',
             spec: 'split %s by %delim',
             defaults: [localize('hello') + ' ' + localize('world'), " "]
+        },
+        reportRegex : {
+            type: 'reporter',
+            category: 'operators',
+            spec: 'regex %s %s',
+            defaults: [localize('pattern'), localize('modifiers')]
+        },
+        reportTextReplace: {
+            type: 'reporter',
+            category: 'operators',
+            spec: 'replace %s with %s in %s',
+            defaults: [localize('search') + ' ' + localize('value'), localize('new') + ' ' + localize('value'), localize('text')]
         },
         reportTypeOf: { // only in dev mode for debugging
             dev: true,
@@ -1763,6 +1783,9 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push('-');
         blocks.push(block('doStamp'));
 
+        blocks.push('-');
+        blocks.push(block('printString'));
+
     } else if (cat === 'control') {
 
         blocks.push(block('receiveGo'));
@@ -1900,6 +1923,9 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportTextSplit'));
         blocks.push(block('reportLetter'));
         blocks.push(block('reportStringSize'));
+        blocks.push('-');
+        blocks.push(block('reportRegex'));
+        blocks.push(block('reportTextReplace'));
         blocks.push('-');
         blocks.push(block('reportUnicode'));
         blocks.push(block('reportUnicodeAsLetter'));
@@ -2785,6 +2811,27 @@ SpriteMorph.prototype.doStamp = function () {
     if (isWarped) {
         this.startWarp();
     }
+};
+
+// String printing
+// print %s at x: %n y: %n color: %clr font: %s size: %n
+
+SpriteMorph.prototype.printString = function(msg, x, y, font, fontSize, colorStr) {
+    var stage = this.parent,
+        context = stage.penTrails().getContext('2d');    
+
+    // Convert stage coordinates to context coordinates
+    x = stage.width()/2 + x;
+    y = stage.height()/2 - y;
+    
+    // If using %clr:
+    // context.fillStyle = "rgba(" + aColor.r + "," + aColor.g + "," + aColor.b + "," + aColor.a + ")";
+    context.fillStyle = colorStr;
+    context.font = "normal " + fontSize + "px " + font;
+    context.fillText(msg, x, y);
+
+    // Forces text to be drawn immediately   
+    stage.changed();
 };
 
 SpriteMorph.prototype.clear = function () {

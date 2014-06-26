@@ -676,6 +676,9 @@ Process.prototype.handleError = function (error, element) {
     this.stop();
     this.errorFlag = true;
     this.topBlock.addErrorHighlight();
+
+    console.log(this, error.name, error.message);
+    
     (element || this.topBlock).showBubble(
         (element ? '' : 'Inside: ')
             + error.name
@@ -2151,6 +2154,14 @@ Process.prototype.reportTextSplit = function (string, delimiter) {
         del = (delimiter || '').toString();
     }
     return new List(str.split(del));
+};
+
+Process.prototype.reportRegex = function(pattern, modifiers) {
+    return new RegExp(pattern, modifiers);
+};
+
+Process.prototype.reportTextReplace = function (searchValue, newValue, text) {
+    return text.replace(searchValue, newValue);
 };
 
 // Process debugging
