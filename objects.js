@@ -1043,6 +1043,7 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'operators',
             spec: 'replace %s with %s in %s',
             defaults: [localize('search') + ' ' + localize('value'), localize('new') + ' ' + localize('value'), localize('text')]
+	},
         reportJSFunction: { // experimental
             type: 'reporter',
             category: 'operators',
