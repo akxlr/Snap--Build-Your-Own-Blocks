@@ -155,7 +155,7 @@ DialogBoxMorph, BlockInputFragmentMorph, PrototypeHatBlockMorph, Costume*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.blocks = '2014-June-06';
+modules.blocks = '2014-October-01';
 
 
 var SyntaxElementMorph;
@@ -396,10 +396,11 @@ SyntaxElementMorph.prototype.allInputs = function () {
 SyntaxElementMorph.prototype.allEmptySlots = function () {
 /*
     answer empty input slots of all children excluding myself,
-    but omit those in nested rings (lambdas)
+    but omit those in nested rings (lambdas) and JS-Function primitives
 */
     var empty = [];
-    if (!(this instanceof RingMorph)) {
+    if (!(this instanceof RingMorph) &&
+            (this.selector !== 'reportJSFunction')) {
         this.children.forEach(function (morph) {
             if (morph.isEmptySlot && morph.isEmptySlot()) {
                 empty.push(morph);
@@ -655,7 +656,9 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
     var part, tokens;
     if (spec[0] === '%' &&
             spec.length > 1 &&
-            this.selector !== 'reportGetVar') {
+            (this.selector !== 'reportGetVar' ||
+                (spec === '%turtleOutline' && this.isObjInputFragment()))) {
+
         // check for variable multi-arg-slot:
         if ((spec.length > 5) && (spec.slice(0, 5) === '%mult')) {
             part = new MultiArgMorph(spec.slice(5));
@@ -665,6 +668,18 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
 
         // single-arg and specialized multi-arg slots:
         switch (spec) {
+        case '%imgsource':
+            part = new InputSlotMorph(
+                null, // text
+                false, // non-numeric
+                {
+                    'pen trails': ['pen trails'],
+                    'stage image': ['stage image']
+                },
+                true
+            );
+            part.setContents(['pen trails']);
+            break;
         case '%inputs':
             part = new MultiArgMorph('%s', 'with inputs');
             part.isStatic = false;
@@ -836,6 +851,7 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
                 null, // text
                 false, // numeric?
                 {
+                    'letter' : ['letter'],
                     'whitespace' : ['whitespace'],
                     'line' : ['line'],
                     'tab' : ['tab'],
@@ -1271,7 +1287,7 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
         case '%pause':
             part = new SymbolMorph('pause');
             part.size = this.fontSize;
-            part.color = new Color(160, 80, 0);
+            part.color = new Color(255, 220, 0);
             part.isProtectedLabel = true; // doesn't participate in zebraing
             part.shadowColor = this.color.darker(this.labelContrast);
             part.shadowOffset = MorphicPreferences.isFlat ?
@@ -1345,6 +1361,13 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
         part.drawNew();
     }
     return part;
+};
+
+SyntaxElementMorph.prototype.isObjInputFragment = function () {
+    // private - for displaying a symbol in a variable block template
+    return (this.selector === 'reportGetVar') &&
+        (this.getSlotSpec() === '%t') &&
+        (this.parent.fragment.type === '%obj');
 };
 
 // SyntaxElementMorph layout:
@@ -1608,12 +1631,13 @@ SyntaxElementMorph.prototype.isEmptySlot = function () {
 
 // SyntaxElementMorph speech bubble feedback:
 
-SyntaxElementMorph.prototype.showBubble = function (value) {
+SyntaxElementMorph.prototype.showBubble = function (value, exportPic) {
     var bubble,
         txt,
         img,
         morphToShow,
         isClickable = false,
+        sf = this.parentThatIsA(ScrollFrameMorph),
         wrrld = this.world();
 
     if ((value === undefined) || !wrrld) {
@@ -1681,6 +1705,26 @@ SyntaxElementMorph.prototype.showBubble = function (value) {
         this.rightCenter().add(new Point(2, 0)),
         isClickable
     );
+    if (exportPic) {
+        this.exportPictureWithResult(bubble);
+    }
+    if (sf) {
+        bubble.keepWithin(sf);
+    }
+};
+
+SyntaxElementMorph.prototype.exportPictureWithResult = function (aBubble) {
+    var scr = this.fullImage(),
+        bub = aBubble.fullImageClassic(),
+        taller = Math.max(0, bub.height - scr.height),
+        pic = newCanvas(new Point(
+            scr.width + bub.width + 2,
+            scr.height + taller
+        )),
+        ctx = pic.getContext('2d');
+    ctx.drawImage(scr, 0, pic.height - scr.height);
+    ctx.drawImage(bub, scr.width + 2, 0);
+    window.open(pic.toDataURL());
 };
 
 // SyntaxElementMorph code mapping
@@ -2009,13 +2053,29 @@ BlockMorph.prototype.userMenu = function () {
     var menu = new MenuMorph(this),
         world = this.world(),
         myself = this,
+        shiftClicked = world.currentKey === 16,
         alternatives,
+        top,
         blck;
 
     menu.addItem(
         "help...",
         'showHelp'
     );
+    if (shiftClicked) {
+        top = this.topBlock();
+        if (top instanceof ReporterBlockMorph) {
+            menu.addItem(
+                "script pic with result...",
+                function () {
+                    top.ExportResultPic();
+                },
+                'open a new window\n' +
+                    'with a picture of both\nthis script and its result',
+                new Color(100, 0, 0)
+            );
+        }
+    }
     if (this.isTemplate) {
         if (!(this.parent instanceof SyntaxElementMorph)) {
             if (this.selector !== 'evaluateCustomBlock') {
@@ -2080,7 +2140,15 @@ BlockMorph.prototype.userMenu = function () {
     menu.addItem(
         "duplicate",
         function () {
-            this.fullCopy().pickUp(world);
+            var dup = myself.fullCopy(),
+                ide = myself.parentThatIsA(IDE_Morph);
+            dup.pickUp(world);
+            if (ide) {
+                world.hand.grabOrigin = {
+                    origin: ide.palette,
+                    position: ide.palette.center()
+                };
+            }
         },
         'make a copy\nand pick it up'
     );
@@ -2089,9 +2157,16 @@ BlockMorph.prototype.userMenu = function () {
             this.thumbnail(0.5, 60, false),
             function () {
                 var cpy = this.fullCopy(),
-                    nb = cpy.nextBlock();
+                    nb = cpy.nextBlock(),
+                    ide = myself.parentThatIsA(IDE_Morph);
                 if (nb) {nb.destroy(); }
                 cpy.pickUp(world);
+                if (ide) {
+                    world.hand.grabOrigin = {
+                        origin: ide.palette,
+                        position: ide.palette.center()
+                    };
+                }
             },
             'only duplicate this block'
         );
@@ -2110,6 +2185,7 @@ BlockMorph.prototype.userMenu = function () {
     if (this.parentThatIsA(RingMorph)) {
         menu.addLine();
         menu.addItem("unringify", 'unringify');
+        menu.addItem("ringify", 'ringify');
         return menu;
     }
     if (this.parent instanceof ReporterSlotMorph
@@ -2156,16 +2232,18 @@ BlockMorph.prototype.developersMenu = function () {
 
 BlockMorph.prototype.hidePrimitive = function () {
     var ide = this.parentThatIsA(IDE_Morph),
+        dict,
         cat;
     if (!ide) {return; }
     StageMorph.prototype.hiddenPrimitives[this.selector] = true;
-    cat = {
+    dict = {
         doWarp: 'control',
         reifyScript: 'operators',
         reifyReporter: 'operators',
         reifyPredicate: 'operators',
         doDeclareVariables: 'variables'
-    }[this.selector] || this.category;
+    };
+    cat = dict[this.selector] || this.category;
     if (cat === 'lists') {cat = 'variables'; }
     ide.flushBlocksCache(cat);
     ide.refreshPalette();
@@ -3344,9 +3422,44 @@ CommandBlockMorph.prototype.isStop = function () {
 // CommandBlockMorph deleting
 
 CommandBlockMorph.prototype.userDestroy = function () {
+    if (this.nextBlock()) {
+        this.userDestroyJustThis();
+        return;
+    }
     var cslot = this.parentThatIsA(CSlotMorph);
     this.destroy();
     if (cslot) {
+        cslot.fixLayout();
+    }
+};
+
+CommandBlockMorph.prototype.userDestroyJustThis = function () {
+    // delete just this one block, reattach next block to the previous one,
+    var scripts = this.parentThatIsA(ScriptsMorph),
+        cs = this.parentThatIsA(CommandSlotMorph),
+        pb,
+        nb = this.nextBlock(),
+        above,
+        cslot = this.parentThatIsA(CSlotMorph);
+
+    if (this.parent) {
+        pb = this.parent.parentThatIsA(CommandBlockMorph);
+    }
+    if (pb && (pb.nextBlock() === this)) {
+        above = pb;
+    } else if (cs && (cs.nestedBlock() === this)) {
+        above = cs;
+    }
+    this.destroy();
+    if (nb) {
+        if (above instanceof CommandSlotMorph) {
+            above.nestedBlock(nb);
+        } else if (above instanceof CommandBlockMorph) {
+            above.nextBlock(nb);
+        } else {
+            scripts.add(nb);
+        }
+    } else if (cslot) {
         cslot.fixLayout();
     }
 };
@@ -4051,6 +4164,23 @@ ReporterBlockMorph.prototype.mouseClickLeft = function (pos) {
         ReporterBlockMorph.uber.mouseClickLeft.call(this, pos);
     }
 };
+
+// ReporterBlock exporting picture with result bubble
+
+ReporterBlockMorph.prototype.ExportResultPic = function () {
+    var top = this.topBlock(),
+        receiver = top.receiver(),
+        stage;
+    if (top !== this) {return; }
+    if (receiver) {
+        stage = receiver.parentThatIsA(StageMorph);
+        if (stage) {
+            stage.threads.stopProcess(top);
+            stage.threads.startProcess(top, false, true);
+        }
+    }
+};
+
 
 // ReporterBlockMorph deleting
 
@@ -6466,7 +6596,7 @@ InputSlotMorph.prototype.collidablesMenu = function () {
         allNames = [];
 
     stage.children.forEach(function (morph) {
-        if (morph instanceof SpriteMorph) {
+        if (morph instanceof SpriteMorph && !morph.isClone) {
             if (morph.name !== rcvr.name) {
                 allNames = allNames.concat(morph.name);
             }
@@ -6641,9 +6771,6 @@ InputSlotMorph.prototype.soundsMenu = function () {
 InputSlotMorph.prototype.getVarNamesDict = function () {
     var block = this.parentThatIsA(BlockMorph),
         rcvr,
-        proto,
-        rings,
-        declarations,
         tempVars = [],
         dict;
 
@@ -6651,28 +6778,26 @@ InputSlotMorph.prototype.getVarNamesDict = function () {
         return {};
     }
     rcvr = block.receiver();
-
-    proto = detect(block.allParents(), function (morph) {
-        return morph instanceof PrototypeHatBlockMorph;
+    block.allParents().forEach(function (morph) {
+        if (morph instanceof PrototypeHatBlockMorph) {
+            tempVars.push.apply(
+                tempVars,
+                morph.inputs()[0].inputFragmentNames()
+            );
+        } else if (morph instanceof BlockMorph) {
+            morph.inputs().forEach(function (inp) {
+                if (inp instanceof TemplateSlotMorph) {
+                    tempVars.push(inp.contents());
+                } else if (inp instanceof MultiArgMorph) {
+                    inp.children.forEach(function (m) {
+                        if (m instanceof TemplateSlotMorph) {
+                            tempVars.push(m.contents());
+                        }
+                    });
+                }
+            });
+        }
     });
-    if (proto) {
-        tempVars = proto.inputs()[0].inputFragmentNames();
-    }
-
-    rings = block.allParents().filter(function (block) {
-        return block instanceof RingMorph;
-    });
-    rings.forEach(function (block) {
-        tempVars = tempVars.concat(block.inputs()[1].evaluate());
-    });
-
-    declarations = block.allParents().filter(function (block) {
-        return block.selector === 'doDeclareVariables';
-    });
-    declarations.forEach(function (block) {
-        tempVars = tempVars.concat(block.inputs()[0].evaluate());
-    });
-
     if (rcvr) {
         dict = rcvr.variables.allNamesDict();
         tempVars.forEach(function (name) {
