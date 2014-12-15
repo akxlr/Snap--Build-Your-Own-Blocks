@@ -132,12 +132,27 @@ Process.prototype.handleError = function (error, element) {
     var m = element;
     this.stop();
     this.errorFlag = true;
-    //this.topBlock.addErrorHighlight();
-    this.topBlock.removeHighlight();
-    m.addErrorHighlight();
 
-    console.log(this, error.name, error.message);
-    console.log(m, error.name);
+    this.topBlock.removeHighlight();
+
+    // add highlight to the trouble block
+    var hl = m.addErrorHighlight();
+
+    // traverse the context tree
+    // add error highlight to expression of root
+    var t = this.context,
+        t1;
+
+    while (t != null) {
+        t1 = t;
+        t = t.parentContext;
+    }
+    t1.expression.addErrorHighlight();
+
+    //console.log(this.context);
+    //console.log(this, error.name, error.message);
+    
+    console.log("Error in block (", m.blockSpec, "): ", error.name, error.message);
 
     if (isNil(m) || isNil(m.world())) {m = this.topBlock; }
     m.showBubble(
@@ -146,4 +161,37 @@ Process.prototype.handleError = function (error, element) {
             + '\n'
             + error.message
     );
+};
+
+Process.prototype.doInsertInList = function (element, index, list) {
+    var idx = index;
+    if (index === '') {
+        return null;
+    }
+    if (this.inputOption(index) === 'any') {
+        idx = this.reportRandom(1, list.length());
+    }
+    if (this.inputOption(index) === 'last') {
+        idx = list.length() + 1;
+    }
+    list.add(element, idx);
+};
+
+Process.prototype.reportListItem = function (index, list) {
+
+    if (list === null) {
+        throw {name: "reportListItemError", message: "list is null"};
+    }
+
+    var idx = index;
+    if (index === '') {
+        return '';
+    }
+    if (this.inputOption(index) === 'any') {
+        idx = this.reportRandom(1, list.length());
+    }
+    if (this.inputOption(index) === 'last') {
+        idx = list.length();
+    }
+    return list.at(idx);
 };
