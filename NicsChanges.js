@@ -138,6 +138,9 @@ Process.prototype.handleError = function (error, element) {
     // add highlight to the trouble block
     var hl = m.addErrorHighlight();
 
+    // add to temporaries, remove on next click
+    world.hand.temporaries.push(hl);
+
     // traverse the context tree
     // add error highlight to expression of root
     var t = this.context,
@@ -147,11 +150,11 @@ Process.prototype.handleError = function (error, element) {
         t1 = t;
         t = t.parentContext;
     }
-    t1.expression.addErrorHighlight();
+    if (t1.expression != m) {
+        hl = t1.expression.addErrorHighlight();
+        world.hand.temporaries.push(hl);
+    }
 
-    //console.log(this.context);
-    //console.log(this, error.name, error.message);
-    
     console.log("Error in block (", m.blockSpec, "): ", error.name, error.message);
 
     if (isNil(m) || isNil(m.world())) {m = this.topBlock; }
