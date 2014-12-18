@@ -1,4 +1,3 @@
-
 // From blocks.js
 SyntaxElementMorph.prototype.showBubble = function (value, exportPic) {
     var bubble,
@@ -197,4 +196,24 @@ Process.prototype.reportListItem = function (index, list) {
         idx = list.length();
     }
     return list.at(idx);
+};
+
+// morphic.js
+SpeechBubbleMorph.prototype.popUp = function (world, pos, isClickable) {
+    this.drawNew();
+    this.setPosition(pos.subtract(new Point(0, this.height())));
+    this.addShadow(new Point(2, 2), 80);
+    this.keepWithin(world);
+    world.add(this);
+    this.fullChanged();
+    world.hand.destroyTemporaries();
+    world.hand.temporaries.push(this);
+
+    if (!isClickable) {
+        this.mouseEnter = function () {
+            this.destroy();
+        };
+    } else {
+        this.isClickable = true;
+    }
 };
