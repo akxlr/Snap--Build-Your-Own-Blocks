@@ -138,7 +138,7 @@ Process.prototype.handleError = function (error, element) {
     var hl = m.addErrorHighlight();
 
     // add to temporaries, remove on next click
-    world.hand.temporaries.push(hl);
+    //world.hand.temporaries.push(hl);
 
     // traverse the context tree
     // add error highlight to expression of root
@@ -151,7 +151,7 @@ Process.prototype.handleError = function (error, element) {
     }
     if (t1.expression != m) {
         hl = t1.expression.addErrorHighlight();
-        world.hand.temporaries.push(hl);
+        //world.hand.temporaries.push(hl);
     }
 
     console.log("Error in block (", m.blockSpec, "): ", error.name, error.message);
@@ -182,7 +182,7 @@ Process.prototype.doInsertInList = function (element, index, list) {
 Process.prototype.reportListItem = function (index, list) {
 
     if (list === null) {
-        throw {name: "reportListItemError", message: "list is null"};
+        throw {name: "List report error", message: "there is no list to get an element from"};
     }
 
     var idx = index;
@@ -210,9 +210,9 @@ SpeechBubbleMorph.prototype.popUp = function (world, pos, isClickable) {
     world.hand.temporaries.push(this);
 
     if (!isClickable) {
-        this.mouseEnter = function () {
+        /*this.mouseEnter = function () {
             this.destroy();
-        };
+        };*/
     } else {
         this.isClickable = true;
     }
