@@ -100,3 +100,10 @@ ThreadManager()
     isImplicitLambda    marker for return ops
     isCustomBlock   marker for return ops
     emptySlots        caches the number of empty slots for reification
+
+
+// Definition locations
+
+DialogBoxMorph: widgets.js
+ScrollFrameMorph: morphic.js
+ListMorph: morphic.js
