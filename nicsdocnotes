@@ -107,3 +107,4 @@ ThreadManager()
 DialogBoxMorph: widgets.js
 ScrollFrameMorph: morphic.js
 ListMorph: morphic.js
+BlockEditorMorph: byob.js

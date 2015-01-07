@@ -1,3 +1,120 @@
+// Custom Error Dialog
+
+var ErrorLogMorph
+
+ErrorLogMorph.prototype = new DialogBoxMorph();
+ErrorLogMorph.prototype.constructor = ErrorLogMorph;
+ErrorLogMorph.uber = DialogBoxMorph.prototype;
+
+function ErrorLogMorph(target) {
+    this.init(target);
+}
+
+ErrorLogMorph.prototype.init = function (clearFunc, log) {
+    /*
+     * buttons - button names and callback functions
+     *     [{name: 'asdf', action: somefunc}]
+     * log - array of messages to be rendered
+     *     ['kitten in the fireplace', 'list is empty']
+     */
+
+    // Call parent init function
+    ErrorLogMorph.uber.init.call(
+        this
+    );
+
+    var myself = this;
+
+    this.labelString = 'Error Log';
+    this.createLabel();
+
+    // create error log area
+    var list = new ListMorph(
+        (log !== null ? log : []),
+        null,
+        null,
+        null
+    ); 
+
+    this.addBody(list);
+    this.addButton('ok', 'OK');
+    if (clearFunc) {
+        this.addButton(clearFunc, 'Clear');
+    }
+
+
+    this.fixLayout();
+    this.drawNew();
+    
+}
+
+ErrorLogMorph.prototype.popUp = function (world) {
+    ErrorLogMorph.uber.popUp.call(this, world);
+    this.handle = new HandleMorph(
+        this,
+        null,
+        null,
+        this.corner,
+        this.corner
+    );
+}
+
+ErrorLogMorph.prototype.fixLayout = function () {
+    var th = fontHeight(this.titleFontSize) + this.titlePadding * 2, w;
+
+
+    if (this.body) {
+        this.body.setPosition(this.position().add(new Point(
+            this.padding,
+            th + this.padding
+        )));
+
+        this.body.setExtent(new Point(
+            this.width() - this.padding * 2,
+            this.height() - this.padding * 3 - th - this.buttons.height()
+        ));
+
+        this.silentSetWidth(
+            Math.max(
+                this.body.width(),
+                (this.label !== null ? this.label.width() : 0),
+                (this.buttons !== null ? this.buttons.width() : 0)
+            )
+            + this.padding * 2
+        );
+
+        this.silentSetHeight(
+            this.body.height()
+            //+ (this.label !== null ? this.label.height() : 0)
+            //+ (this.buttons !== null ? this.buttons.height() : 0)
+            + this.padding * 2
+            + th
+        );
+    }
+
+    if (this.label) {
+        this.label.setCenter(this.center());
+        this.label.setTop(this.top() + (th - this.label.height()) / 2);
+    }
+
+    if (this.buttons && (this.buttons.children.length > 0)) {
+        this.buttons.fixLayout();
+        this.silentSetHeight(
+            this.height()
+                    + this.buttons.height()
+                    + this.padding
+        );
+        this.buttons.setCenter(this.center());
+        this.buttons.setBottom(this.bottom() - this.padding);
+    }
+
+    /*if (this.buttons && (this.buttons.children.length > 0)) {
+        this.buttons.setCenter(this.center());
+        this.buttons.setBottom(this.bottom() - this.padding);
+    }*/ // alternate from EditorBox
+}
+
+
 // messy stuff
 
 var ErrorManager;
@@ -6,6 +123,23 @@ function ErrorManager() {
     this.errorHighlights = [];
     this.log = [];
     this.dialog = null;
+    this.magic = null;
+}
+
+ErrorManager.prototype.testingGround = function() {
+    var dlg = new DialogBoxMorph();
+    dlg.inform('Title', 'text', world);
+
+    dlg.resizer = new HandleMorph(dlg,
+            10,
+            10,
+            dlg.corner,
+            dlg.corner
+    );
+
+    dlg.fixLayout();
+    dlg.drawNew();
+    this.magic = dlg;
 }
 
 ErrorManager.prototype.addHighlight = function (hl) {
@@ -43,11 +177,6 @@ ErrorManager.prototype.showLog2 = function () {
         'Clear Log'
     );
 
-    var cleanButton = dlg.addButton( function() {
-            self.clearHighlights();
-        },
-        'Clear Errors' 
-    );
    
     dlg.inform('Error Log',
         textstring, world);
@@ -65,11 +194,6 @@ ErrorManager.prototype.showLog = function () {
     } 
     var dlg = new DialogBoxMorph();
 
-    /*var textstring = '';
-    this.log.forEach(function (msg) {
-        textstring = textstring + msg + '\n';
-    });*/
-
     dlg.labelString = 'Error Log';
     dlg.createLabel();
 
@@ -84,9 +208,23 @@ ErrorManager.prototype.showLog = function () {
     dlg.addBody(list);
     dlg.addButton('ok', 'OK');
 
+    dlg.addButton( function() {
+            self.clearHighlights();
+        },
+        'Clear Errors' 
+    );
+
     dlg.fixLayout();
     dlg.drawNew();  
     dlg.popUp(world);
+
+    dlg.handle = new HandleMorph(
+        dlg,
+        200,
+        100,
+        dlg.corner,
+        dlg.corner
+    );
 
     this.dialog = dlg;
 }
@@ -221,7 +359,7 @@ BlockMorph.prototype.addErrorHighlight = function () {
     highlight = this.singlehighlight(
         this.errorHighlight,
         this.activeBlur,
-        2
+        this.activeBorder
     );
     this.addBack(highlight);
     this.fullChanged();
@@ -405,8 +543,8 @@ DialogBoxMorph.prototype.fixLayout = function () {
             );
             this.silentSetHeight(
                 this.body.height()
-                + (this.label !== null ? this.label.height() : 0)
-                + (this.buttons !== null ? this.buttons.height() : 0)
+                //+ (this.label !== null ? this.label.height() : 0)
+                //+ (this.buttons !== null ? this.buttons.height() : 0)
                 + this.padding * 2
                 + th
             );
