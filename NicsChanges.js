@@ -10,7 +10,7 @@ function ErrorLogMorph(target) {
     this.init(target);
 }
 
-ErrorLogMorph.prototype.init = function (clearFunc, log) {
+ErrorLogMorph.prototype.init = function (error_manager) {
     /*
      * buttons - button names and callback functions
      *     [{name: 'asdf', action: somefunc}]
@@ -24,13 +24,14 @@ ErrorLogMorph.prototype.init = function (clearFunc, log) {
     );
 
     var myself = this;
+    this.error_manager = error_manager;
 
     this.labelString = 'Error Log';
     this.createLabel();
 
     // create error log area
     var list = new ListMorph(
-        (log !== null ? log : []),
+        (error_manager.log !== null ? error_manager.log : []),
         null,
         null,
         null
@@ -38,8 +39,15 @@ ErrorLogMorph.prototype.init = function (clearFunc, log) {
 
     this.addBody(list);
     this.addButton('ok', 'OK');
-    if (clearFunc) {
-        this.addButton(clearFunc, 'Clear');
+    if (error_manager.clearHighlights) {
+        this.addButton(function () {
+            error_manager.clearHighlights();
+        }, 'Clear GFX Errors');
+    }
+    if (error_manager.clearLog) {
+        this.addButton(function () {
+            error_manager.clearLog();
+        }, 'Clear Log');
     }
 
 
@@ -114,6 +122,10 @@ ErrorLogMorph.prototype.fixLayout = function () {
     }*/ // alternate from EditorBox
 }
 
+ErrorLogMorph.prototype.accept = function() {
+    this.error_manager.dialog = null;
+    this.destroy();
+}
 
 // messy stuff
 
@@ -122,24 +134,7 @@ var ErrorManager;
 function ErrorManager() {
     this.errorHighlights = [];
     this.log = [];
-    this.dialog = null;
-    this.magic = null;
-}
-
-ErrorManager.prototype.testingGround = function() {
-    var dlg = new DialogBoxMorph();
-    dlg.inform('Title', 'text', world);
-
-    dlg.resizer = new HandleMorph(dlg,
-            10,
-            10,
-            dlg.corner,
-            dlg.corner
-    );
-
-    dlg.fixLayout();
-    dlg.drawNew();
-    this.magic = dlg;
+    this.dialog = null; // Graphical Error Log
 }
 
 ErrorManager.prototype.addHighlight = function (hl) {
@@ -153,174 +148,33 @@ ErrorManager.prototype.clearHighlights = function () {
     this.errorHighlights = [];
 }
 
-ErrorManager.prototype.showLog2 = function () {
-
-    var self = this;
-
-    if (this.dialog !== null) {
-        this.dialog.destroy();
-    } 
-    var dlg = new DialogBoxMorph();
-
-    var textstring = '';
-    this.log.forEach(function (msg) {
-        textstring = textstring + msg + '\n';
-    });
-
-    var clearButton = dlg.addButton( function() {
-            self.clearLog();
-            dlg.body.text = "";
-            dlg.body.drawNew();
-            dlg.fixLayout();
-            dlg.drawNew();
-        },
-        'Clear Log'
-    );
-
-   
-    dlg.inform('Error Log',
-        textstring, world);
-    dlg.fixLayout();
-    dlg.drawNew();  
-    this.dialog = dlg;
-    
-}
-
-ErrorManager.prototype.showLog = function () {
-    var self = this;
-
-    if (this.dialog !== null) {
-        this.dialog.destroy();
-    } 
-    var dlg = new DialogBoxMorph();
-
-    dlg.labelString = 'Error Log';
-    dlg.createLabel();
-
-    var list = new ListMorph(
-        self.log,
-        null,
-        null,
-        null
-    );
-    list.setExtent(new Point(500, 100));
-
-    dlg.addBody(list);
-    dlg.addButton('ok', 'OK');
-
-    dlg.addButton( function() {
-            self.clearHighlights();
-        },
-        'Clear Errors' 
-    );
-
-    dlg.fixLayout();
-    dlg.drawNew();  
-    dlg.popUp(world);
-
-    dlg.handle = new HandleMorph(
-        dlg,
-        200,
-        100,
-        dlg.corner,
-        dlg.corner
-    );
-
-    this.dialog = dlg;
-}
-
 ErrorManager.prototype.clearLog = function() {
     this.log = [];
+    if (this.dialog) {
+        this.dialog.body.elements = this.log;
+        this.dialog.body.buildListContents();
+        this.dialog.fixLayout();
+    }
 }
 
 ErrorManager.prototype.logErrorMsg = function (msg) {
     this.log.push(msg);
 }
 
+ErrorManager.prototype.showLog = function () {
+    if (this.dialog == null) {
+        this.dialog = new ErrorLogMorph(this);
+
+        if (world) {
+            this.dialog.popUp(world);
+        }
+    } else {
+        this.dialog.body.elements = this.log;
+        this.dialog.body.buildListContents();
+    }
+}
+
 var nicsglobalvar = new ErrorManager();
-
-// From blocks.js
-SyntaxElementMorph.prototype.showBubble = function (value, exportPic) {
-    var bubble,
-        txt,
-        img,
-        morphToShow,
-        isClickable = false,
-        sf = this.parentThatIsA(ScrollFrameMorph),
-        wrrld = this.world();
-
-    if ((value === undefined) || !wrrld) {
-        return null;
-    }
-    if (value instanceof ListWatcherMorph) {
-        morphToShow = value;
-        morphToShow.update(true);
-        morphToShow.step = value.update;
-        morphToShow.isDraggable = false;
-        isClickable = true;
-    } else if (value instanceof Morph) {
-        img = value.fullImage();
-        morphToShow = new Morph();
-        morphToShow.silentSetWidth(img.width);
-        morphToShow.silentSetHeight(img.height);
-        morphToShow.image = img;
-    } else if (value instanceof Costume) {
-        img = value.thumbnail(new Point(40, 40));
-        morphToShow = new Morph();
-        morphToShow.silentSetWidth(img.width);
-        morphToShow.silentSetHeight(img.height);
-        morphToShow.image = img;
-    } else if (value instanceof Context) {
-        img = value.image();
-        morphToShow = new Morph();
-        morphToShow.silentSetWidth(img.width);
-        morphToShow.silentSetHeight(img.height);
-        morphToShow.image = img;
-    } else if (typeof value === 'boolean') {
-        morphToShow = SpriteMorph.prototype.booleanMorph.call(
-            null,
-            value
-        );
-    } else if (isString(value)) {
-        txt  = value.length > 500 ? value.slice(0, 500) + '...' : value;
-        morphToShow = new TextMorph(
-            txt,
-            this.fontSize
-        );
-    } else if (value === null) {
-        morphToShow = new TextMorph(
-            '',
-            this.fontSize
-        );
-    } else if (value === 0) {
-        morphToShow = new TextMorph(
-            '0',
-            this.fontSize
-        );
-    } else if (value.toString) {
-        morphToShow = new TextMorph(
-            value.toString(),
-            this.fontSize
-        );
-    }
-    bubble = new SpeechBubbleMorph(
-        morphToShow,
-        null,
-        Math.max(this.rounding - 2, 6),
-        0
-    );
-    bubble.popUp(
-        wrrld,
-        this.rightCenter().add(new Point(2, 0)),
-        isClickable
-    );
-    if (exportPic) {
-        this.exportPictureWithResult(bubble);
-    }
-    if (sf) {
-        bubble.keepWithin(sf);
-    }
-};
 
 BlockMorph.prototype.highlight = function (color, blur, border) {
     var highlight = new BlockHighlightMorph(),
@@ -375,21 +229,6 @@ Process.prototype.handleError = function (error, element) {
 
     this.topBlock.removeHighlight();
 
-    // dialog box stuff
-
-   /* 
-    dlg = new DialogBoxMorph();
-    dlg.inform('About Snap',
-        'Fixie gentrify disrupt trust fund, readymade chia semiotics\n'
-        +'Truffaut umami vegan Pinterest deep v. Trust fund health goth\n'
-        +'flannel synth street art. Trust fund wayfarers flannel wolf', world);
-    dlg.fixLayout();
-    dlg.drawNew();
-*/
-
-    //
-
-
     // add highlight to the trouble block
     var hl = m.addErrorHighlight();
     nicsglobalvar.addHighlight(hl);
@@ -432,38 +271,6 @@ Process.prototype.handleError = function (error, element) {
     );*/
 };
 
-Process.prototype.doInsertInList = function (element, index, list) {
-    var idx = index;
-    if (index === '') {
-        return null;
-    }
-    if (this.inputOption(index) === 'any') {
-        idx = this.reportRandom(1, list.length());
-    }
-    if (this.inputOption(index) === 'last') {
-        idx = list.length() + 1;
-    }
-    list.add(element, idx);
-};
-
-Process.prototype.reportListItem = function (index, list) {
-
-    if (list === null) {
-        throw {name: "report item from list error", message: "there is no list to get an element from"};
-    }
-
-    var idx = index;
-    if (index === '') {
-        return '';
-    }
-    if (this.inputOption(index) === 'any') {
-        idx = this.reportRandom(1, list.length());
-    }
-    if (this.inputOption(index) === 'last') {
-        idx = list.length();
-    }
-    return list.at(idx);
-};
 
 // morphic.js
 SpeechBubbleMorph.prototype.popUp = function (world, pos, isClickable) {
