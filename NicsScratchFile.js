@@ -6,6 +6,17 @@ function Debugger(process) {
 
 Debugger.prototype.init = function (process) {
     this.process = process;
+    var self = this;
+
+    // hijack process evaluateBlock function
+
+    process.evaluateBlock = function(block, argCount) {
+
+        this.pause();
+        self.args = [block, argCount];
+
+        //Process.prototype.evaluateBlock.apply(process, [block, argCount]);
+    };
 };
 
 Debugger.prototype.printVars = function () {
@@ -14,10 +25,15 @@ Debugger.prototype.printVars = function () {
     });
 };
 
-Debugger.prototype.step = function () {
+Debugger.prototype.step = function() {
+    this.process.resume();
+    Process.prototype.evaluateBlock.apply(this.process, this.args);
+}
+
+/*Debugger.prototype.step = function () {
     this.process.resume();
     this.process.runStep();
     this.process.pause();
-};
+};*/
 
 var nicsglobalvar2;
