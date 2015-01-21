@@ -241,7 +241,9 @@ Process.prototype.handleError = function (error, element) {
     var t = this.context,
         t1;
 
-    while (t != null) {
+    /* old code
+     while (t != null) {
+     
         t1 = t;
         t = t.parentContext;
     }
@@ -249,6 +251,17 @@ Process.prototype.handleError = function (error, element) {
         hl = t1.expression.addErrorHighlight();
         nicsglobalvar.addHighlight(hl);
         //world.hand.temporaries.push(hl);
+    }*/
+
+
+    while (t != null) {
+        t1 = t;
+        t = t.parentContext;
+
+        if (t1.expression instanceof BlockMorph) {
+            hl = t1.expression.addErrorHighlight();
+            nicsglobalvar.addHighlight(hl);
+        }
     }
 
     console.log("Error in block (", m.blockSpec, "): ", error.name, error.message);
