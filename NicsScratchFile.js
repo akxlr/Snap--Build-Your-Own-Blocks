@@ -12,6 +12,7 @@ Debugger.prototype.init = function (process) {
 
     process.evaluateBlock = function(block, argCount) {
 
+        console.log('Paused on block: ' + block.blockSpec);
         this.pause();
         self.args = [block, argCount];
 
@@ -37,3 +38,29 @@ Debugger.prototype.step = function() {
 };*/
 
 var nicsglobalvar2;
+
+
+//////////////////////////
+
+BlockMorph.prototype.addTestHighlight = function (color) {
+    var block_color = new Color(0, 0, 255, 255);
+
+    if (color != null) {
+        block_color = color;
+    }
+
+    var isHidden = !this.isVisible,
+        highlight;
+
+    if (isHidden) {this.show(); }
+    this.removeHighlight();
+    highlight = this.singlehighlight(
+        block_color,
+        this.activeBlur,
+        this.activeBorder
+    );
+    this.addBack(highlight);
+    this.fullChanged();
+    if (isHidden) {this.hide(); }
+    return highlight;
+};
