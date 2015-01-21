@@ -13,6 +13,7 @@ Debugger.prototype.init = function (process) {
     process.evaluateBlock = function(block, argCount) {
 
         console.log('Paused on block: ' + block.blockSpec);
+        block.addTestHighlight();
         this.pause();
         self.args = [block, argCount];
 
@@ -28,8 +29,17 @@ Debugger.prototype.printVars = function () {
 
 Debugger.prototype.step = function() {
     this.process.resume();
+    this.args[0].removeHighlight();
     Process.prototype.evaluateBlock.apply(this.process, this.args);
-}
+};
+
+Debugger.prototype.resume = function() {
+    this.process.resume();
+    this.args[0].removeHighlight();
+    this.process.evaluateBlock = Process.prototype.evaluateBlock;
+    
+    Process.prototype.evaluateBlock.apply(this.process, this.args);
+};
 
 /*Debugger.prototype.step = function () {
     this.process.resume();
