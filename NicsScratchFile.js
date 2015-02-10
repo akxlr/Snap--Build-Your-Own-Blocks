@@ -66,11 +66,31 @@ BlockMorph.prototype.addTestHighlight = function (color) {
     this.removeHighlight();
     highlight = this.singlehighlight(
         block_color,
-        this.activeBlur,
         this.activeBorder
     );
     this.addBack(highlight);
     this.fullChanged();
     if (isHidden) {this.hide(); }
     return highlight;
+};
+
+// BlockMorph copying
+
+BlockMorph.prototype.fullCopy = function () {
+    var ans = BlockMorph.uber.fullCopy.call(this);
+    //ans.removeHighlight();
+    ans.isDraggable = true;
+    if (this.instantiationSpec) {
+        ans.setSpec(this.instantiationSpec);
+    }
+    ans.allChildren().filter(function (block) {
+        return !isNil(block.comment);
+    }).forEach(function (block) {
+        var cmnt = block.comment.fullCopy();
+        block.comment = cmnt;
+        cmnt.block = block;
+        //block.comment = null;
+
+    });
+    return ans;
 };
