@@ -179,27 +179,21 @@ var nicsglobalvar = new ErrorManager();
 BlockMorph.prototype.highlight = function (color, blur, border) {
     var highlight = new BlockHighlightMorph(),
         fb = this.fullBounds(),
-        edge = useBlurredShadows && !MorphicPreferences.isFlat ?
-                blur : border;
+        edge = border;
     highlight.setExtent(fb.extent().add(edge * 2));
     highlight.color = color;
-    highlight.image = useBlurredShadows && !MorphicPreferences.isFlat ?
-            this.highlightImageBlurred(color, blur)
-                : this.highlightImage(color, border);
+    highlight.image = this.highlightImage(color, border);
     highlight.setPosition(fb.origin.subtract(new Point(edge, edge)));
     return highlight;
 };
 
-BlockMorph.prototype.singlehighlight = function (color, blur, border) {
+BlockMorph.prototype.singlehighlight = function (color, border) {
     var highlight = new BlockHighlightMorph(),
         fb = this.bounds,
-        edge = useBlurredShadows && !MorphicPreferences.isFlat ?
-                blur : border;
+        edge = border;
     highlight.setExtent(fb.extent().add(edge*2));
     highlight.color = color;
-    highlight.image = useBlurredShadows && !MorphicPreferences.isFlat ?
-            this.highlightImageBlurred(color, blur)
-                : this.highlightImage(color, border);
+    highlight.image = this.highlightImage(color, border);
     highlight.setPosition(fb.origin.subtract(new Point(edge, edge)));
     return highlight;
 };
@@ -212,7 +206,6 @@ BlockMorph.prototype.addErrorHighlight = function () {
     this.removeHighlight();
     highlight = this.singlehighlight(
         this.errorHighlight,
-        this.activeBlur,
         this.activeBorder
     );
     this.addBack(highlight);
@@ -262,6 +255,11 @@ Process.prototype.handleError = function (error, element) {
             hl = t1.expression.addErrorHighlight();
             nicsglobalvar.addHighlight(hl);
         }
+    }
+
+    if (this.topBlock instanceof CustomCommandBlockMorph) {
+        hl = this.topBlock.addErrorHighlight();
+        nicsglobalvar.addHighlight(hl);
     }
 
     console.log("Error in block (", m.blockSpec, "): ", error.name, error.message);
