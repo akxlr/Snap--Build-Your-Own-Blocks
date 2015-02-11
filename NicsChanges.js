@@ -50,7 +50,6 @@ ErrorLogMorph.prototype.init = function (error_manager) {
         }, 'Clear Log');
     }
 
-
     this.fixLayout();
     this.drawNew();
     
@@ -151,10 +150,11 @@ ErrorManager.prototype.clearHighlights = function () {
 ErrorManager.prototype.clearLog = function() {
     this.log = [];
     if (this.dialog) {
-        this.dialog.body.elements = this.log;
-        this.dialog.body.buildListContents();
-        this.dialog.fixLayout();
+        this.dialog.body.destroy();
     }
+    this.dialog.addBody(new ListMorph(this.log));
+    this.dialog.fixLayout();
+    this.dialog.drawNew();
 }
 
 ErrorManager.prototype.logErrorMsg = function (msg) {
@@ -169,8 +169,10 @@ ErrorManager.prototype.showLog = function () {
             this.dialog.popUp(world);
         }
     } else {
-        this.dialog.body.elements = this.log;
-        this.dialog.body.buildListContents();
+        this.dialog.body.destroy();
+        this.dialog.addBody(new ListMorph(this.log));
+        this.dialog.fixLayout();
+        this.dialog.drawNew();
     }
 }
 
