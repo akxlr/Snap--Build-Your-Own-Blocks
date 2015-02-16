@@ -300,6 +300,7 @@ IDE_Morph.prototype.openIn = function (world) {
 
     function interpretUrlAnchors() {
         var dict;
+	console.log("interpretUrlAnchors: location = " + location);
         if (location.hash.substr(0, 6) === '#open:') {
             hash = location.hash.substr(6);
             if (hash.charAt(0) === '%'
@@ -314,8 +315,10 @@ IDE_Morph.prototype.openIn = function (world) {
                     ),
                     1
                 )) {
+		console.log("dropped text: " + hash);
                 this.droppedText(hash);
             } else {
+		console.log("dropped URL: " + hash);
                 this.droppedText(getURL(hash));
             }
         } else if (location.hash.substr(0, 5) === '#run:') {
@@ -381,8 +384,10 @@ IDE_Morph.prototype.openIn = function (world) {
     }
 
     if (this.userLanguage) {
+	console.log("userLanguage = " + this.userLanguage);
         this.setLanguage(this.userLanguage, interpretUrlAnchors);
     } else {
+	console.log("userLanguage is null");
         interpretUrlAnchors.call(this);
     }
 };
