@@ -370,6 +370,12 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'looks',
             spec: 'clear graphic effects'
         },
+        clearWatchers: {
+            only: StageMorph,
+            type: 'command',
+            category: 'looks',
+            spec: 'clear watchers'
+        },
         changeScale: {
             only: SpriteMorph,
             type: 'command',
@@ -761,6 +767,11 @@ SpriteMorph.prototype.initBlocks = function () {
             type: 'command',
             category: 'control',
             spec: 'pause all %pause'
+        },
+        doBreakpoint: {
+            type: 'command',
+            category: 'control',
+            spec: 'break'
         },
 
         // Sensing
@@ -1874,6 +1885,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('removeClone'));
         blocks.push('-');
         blocks.push(block('doPauseAll'));
+        blocks.push(block('doBreakpoint'));
 
     } else if (cat === 'sensing') {
 
@@ -4924,6 +4936,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('changeEffect'));
         blocks.push(block('setEffect'));
         blocks.push(block('clearEffects'));
+        blocks.push(block('clearWatchers'));
         blocks.push('-');
         blocks.push(block('show'));
         blocks.push(block('hide'));
@@ -5034,6 +5047,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('createClone'));
         blocks.push('-');
         blocks.push(block('doPauseAll'));
+        blocks.push(block('doBreakpoint'));
 
     } else if (cat === 'sensing') {
 
