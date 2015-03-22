@@ -1795,6 +1795,38 @@ Process.prototype.reportURL = function (url) {
     this.pushContext();
 };
 
+Process.prototype.reportHTTPS = function (url) {
+    var response;
+    if (!this.httpRequest) {
+        this.httpRequest = new XMLHttpRequest();
+        this.httpRequest.open("GET", 'https://' + url, true);
+        this.httpRequest.send(null);
+    } else if (this.httpRequest.readyState === 4) {
+        response = this.httpRequest.responseText;
+        this.httpRequest = null;
+        return response;
+    }
+    this.pushContext('doYield');
+    this.pushContext();
+};
+/*
+// in object.js -- blocks.push(block('retrieveFromWeb'));
+Process.prototype.retrieveFromWeb = function (url) {
+    var response;
+    if (!this.httpRequest) {
+        this.httpRequest = new XMLHttpRequest();
+        this.httpRequest.open("GET", + url, true);
+        this.httpRequest.send(null);
+    } else if (this.httpRequest.readyState === 4) {
+        response = this.httpRequest.responseText;
+        this.httpRequest = null;
+        return response;
+    }
+    this.pushContext('doYield');
+    this.pushContext();
+};
+*/
+
 // Process event messages primitives
 
 Process.prototype.doBroadcast = function (message) {

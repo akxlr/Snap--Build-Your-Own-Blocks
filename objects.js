@@ -882,6 +882,13 @@ SpriteMorph.prototype.initBlocks = function () {
             spec: 'http:// %s',
             defaults: ['snap.berkeley.edu']
         },
+        reportHTTPS: {
+            type: 'reporter',
+            category: 'sensing',
+            spec: 'https:// %s',
+            defaults: ['artofcomputing.cecs.anu.edu.au']
+        },
+        
         reportIsFastTracking: {
             type: 'predicate',
             category: 'sensing',
@@ -1914,6 +1921,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportAttributeOf'));
         blocks.push('-');
         blocks.push(block('reportURL'));
+        blocks.push(block('reportHTTPS'));
+        //blocks.push(block('retrieveFromWeb'));
         blocks.push('-');
         blocks.push(block('reportIsFastTracking'));
         blocks.push(block('doSetFastTracking'));
@@ -5070,6 +5079,8 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportAttributeOf'));
         blocks.push('-');
         blocks.push(block('reportURL'));
+        blocks.push(block('reportHTTPS'));
+        //blocks.push(block('retrieveFromWeb'));
         blocks.push('-');
         blocks.push(block('reportIsFastTracking'));
         blocks.push(block('doSetFastTracking'));
