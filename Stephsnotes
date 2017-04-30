@@ -1,0 +1,29 @@
+There are some main tasks I am doing.
+1.pop up error messages/limitations when things go wrong , like the empty list , identified variable and so on.
+Javascript has its own error handling system but lacks of customised error reporting.I need to think about how could things go wrong and add error messages when users make some programming mistakes.
+2.change the interface of the error log / reopen the error log when it is closed.
+The error log could not be re-opened before and could just pop up when an error occur , the user could not reopen the error dialog at any other moment.(error reporting is in the project menu)
+3.track how the error happens./find out which argument goes wrong and in which block
+Not only pop up the error messages , also let users understand where and how things go wrong so that users could easily spot the errors. 
+
+The main changes are made :
+1 error.js which override some main functions written in threads.js. Basically , I mainly added some error checkings to the functions rather than change the functionality of the methods.
+2.StephChangesToGui.js, the new file added to implement reopening the error log.
+
+The project Menu is overrided by adding new code:
+menu.addItem('Error Reporting','openErrorLog'); so in the project menu , there would be a new error reporting submenu.
+
+Bying showing the error dialog , the new function is written to open the error log.
+IDE_Morph.prototype.openErrorLog = function () {
+    this.confirm(
+        'Want to open the error log?',
+        'Error Log',
+        function () { 
+            nicsglobalvar.showLog();
+        }
+    );
+}
+
+Things which still needs to be done:
+1.highlights sometimes are wrong if there are several blocks
+2.track the arguements in the block
